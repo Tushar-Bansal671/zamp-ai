@@ -30,23 +30,23 @@ export default function AuditPage() {
 
   if (notFound) {
     return (
-      <div className="mx-auto max-w-6xl px-5 py-16 text-center">
+      <div className="mx-auto max-w-6xl px-5 py-16 text-center lg:px-8">
         <div className="text-[16px] font-medium">That audit record does not exist.</div>
-        <p className="mt-1 text-[13px] text-muted">
-          It may have been cleared, or the server may have restarted since the run.
-        </p>
-        <Link
-          href="/"
-          className="btn-ghost mt-4 font-mono text-[12px]"
-        >
-          ← Back to the dashboard
-        </Link>
+        <p className="mt-1 text-[13px] text-muted">It may have been cleared, or the server restarted since the run.</p>
+        <Link href="/" className="btn-ghost mt-5 font-mono text-[12px]">← Back to the dashboard</Link>
       </div>
     );
   }
 
   if (!run) {
-    return <div className="mx-auto max-w-6xl px-5 py-16 text-center text-[13px] text-faint">Loading audit…</div>;
+    return (
+      <div className="mx-auto grid max-w-6xl place-items-center px-5 py-24 text-center lg:px-8">
+        <div className="flex flex-col items-center gap-3">
+          <span className="h-8 w-8 rounded-full border-2 border-accent spin-ring" style={{ borderTopColor: "transparent" }} />
+          <div className="font-mono text-[12px] text-faint">Loading audit…</div>
+        </div>
+      </div>
+    );
   }
 
   const verdict = run.status;
@@ -59,66 +59,67 @@ export default function AuditPage() {
     sub: l.status === "NOTE" ? "inference" : "rule",
   }));
 
+  const showPO = po || suggested;
+
   return (
-    <div className="mx-auto max-w-6xl px-5 py-8">
-      {/* Verdict banner */}
-      <div
-        className="rise flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-panel p-5 shadow-card"
-        style={{ borderColor: verdictBorder(verdict) }}
-      >
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-3">
-            <StatusBadge status={verdict} />
-            <span className="font-mono text-[11.5px] text-faint">{run.id}</span>
-            <span className="text-[12px] text-faint">{timestamp(run.createdAt)}</span>
+    <div className="mx-auto max-w-6xl px-5 py-8 lg:px-8">
+      {/* ── Verdict hero ──────────────────────────────────────────── */}
+      <div className="glass verdict-glow rise p-6 sm:p-7" data-verdict={verdict}>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-3">
+              <StatusBadge status={verdict} size="lg" />
+              <span className="font-mono text-[11px] text-faint">{run.id}</span>
+              <span className="font-mono text-[11px] text-faint">{timestamp(run.createdAt)}</span>
+            </div>
+            <h1 className="mt-3.5 text-[24px] font-semibold tracking-tight">{run.extracted?.invoiceNumber || run.fileName}</h1>
+            <div className="mt-1 text-[13.5px] text-muted">{run.extracted?.vendorName || "Unknown vendor"}</div>
+            <p className="mt-3 max-w-2xl whitespace-pre-line text-[13.5px] leading-relaxed text-muted">{run.summary}</p>
           </div>
-          <h1 className="mt-2.5 text-[19px] font-semibold tracking-tight">
-            {run.extracted?.invoiceNumber || run.fileName}
-          </h1>
-          <p className="mt-1 max-w-2xl text-[13.5px] leading-relaxed text-muted">{run.summary}</p>
-        </div>
-        <div className="flex shrink-0 items-center gap-2.5">
-          <Link
-            href="/process"
-            className="btn-primary px-3 py-1.5 text-[12.5px]"
-          >
-            Process another
-          </Link>
-          <Link
-            href="/"
-            className="btn-ghost font-mono text-[11.5px]"
-          >
-            Dashboard
-          </Link>
+          <div className="flex shrink-0 flex-col items-end gap-2.5">
+            <div className="text-right">
+              <div className="font-mono text-[10px] uppercase tracking-widest text-faint">amount</div>
+              <div className="text-[26px] font-semibold tracking-tight">{money(run.extracted?.totalAmount)}</div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Link href="/process" className="btn-primary text-[12.5px]" style={{ padding: "8px 14px" }}>Process another</Link>
+              <Link href="/" className="btn-ghost font-mono text-[11.5px]" style={{ padding: "8px 14px" }}>Dashboard</Link>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Split-screen audit */}
-      <div className="rise mt-5 grid gap-4 lg:grid-cols-2" style={{ animationDelay: "90ms" }}>
-        {/* Left: source document */}
-        <section className="flex flex-col overflow-hidden rounded-xl border border-line bg-panel shadow-card">
-          <div className="flex items-center justify-between border-b border-line px-4 py-3">
-            <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-faint">Source document</span>
-            <span className="font-mono text-[11px] text-faint">{run.fileName}</span>
+      {/* ── Split audit ───────────────────────────────────────────── */}
+      <div className="rise mt-4 grid gap-4 lg:grid-cols-2" style={{ animationDelay: "90ms" }}>
+        {/* Source document */}
+        <section className="glass flex flex-col overflow-hidden">
+          <div className="flex items-center justify-between border-b border-line px-5 py-3.5">
+            <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-faint">Source document</span>
+            <span className="font-mono text-[11px] text-muted">{run.fileName}</span>
           </div>
           <div className="min-h-[480px] flex-1" style={{ background: "var(--term-bg)" }}>
             <iframe src={run.pdfUrl || ""} title="Invoice PDF" className="h-full w-full" style={{ minHeight: 480, border: 0 }} />
           </div>
         </section>
 
-        {/* Right: extraction + reasoning */}
+        {/* Extraction + reasoning + PO */}
         <section className="flex flex-col gap-4">
-          <div className="rounded-lg border border-line bg-panel p-4 shadow-card">
-            <div className="px-1">
-              <ExtractionSummary data={run.extracted} title="What we found on this invoice" />
-            </div>
+          <div className="glass p-5">
+            <ExtractionSummary data={run.extracted} />
           </div>
 
-          <div className="rounded-lg border border-line bg-panel p-4 shadow-card">
-            <h2 className="font-mono text-[11px] uppercase tracking-[0.14em] text-faint">Reasoning log</h2>
-            <ol className="mt-3 space-y-2.5">
+          <div className="glass p-5">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-faint">Reasoning log</span>
+              {run.extractionSource ? (
+                <span className="rounded-full border border-line px-2 py-0.5 font-mono text-[9.5px] uppercase tracking-wider text-accent">
+                  extraction · {run.extractionSource}
+                </span>
+              ) : null}
+            </div>
+            <ol className="mt-4 space-y-3">
               {engineSteps.map((s, i) => (
-                <li key={i} className="flex gap-2.5 text-[13px] leading-relaxed">
+                <li key={i} className="flex gap-3 text-[13px] leading-relaxed">
                   <span
                     className="mt-px shrink-0 font-mono text-[12px] font-semibold"
                     style={{
@@ -134,21 +135,21 @@ export default function AuditPage() {
                   >
                     {s.level === "PASS" ? "✓" : s.level === "FAIL" ? "✕" : "»"}
                   </span>
-                  <div>
+                  <div className="min-w-0">
                     <span className="text-ink">{s.title}</span>
-                    {s.detail ? <div className="text-[12px] text-faint">{s.detail}</div> : null}
+                    {s.detail ? <div className="mt-0.5 text-[12px] text-faint">{s.detail}</div> : null}
                   </div>
                 </li>
               ))}
             </ol>
           </div>
 
-          {(po || suggested) ? (
-            <div className="rounded-lg border border-line bg-panel p-4 shadow-card">
-              <h2 className="font-mono text-[11px] uppercase tracking-[0.14em] text-faint">
-                {(po && "Matched PO") || (suggested && "Suggested PO")}
-              </h2>
-              <div className="mt-3 space-y-0 text-[13px]">
+          {showPO ? (
+            <div className="glass p-5">
+              <div className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-faint">
+                {po ? "Matched PO" : "Suggested PO"}
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 text-[13px]">
                 <KV k="PO" v={(po || suggested)?.poNumber || "—"} />
                 <KV k="Vendor" v={(po || suggested)?.vendorName || "—"} />
                 <KV k="Total" v={money((po || suggested)?.totalAmount)} />
@@ -166,18 +167,9 @@ export default function AuditPage() {
 
 function KV({ k, v }) {
   return (
-    <div className="flex items-baseline justify-between gap-4 border-b border-line-soft py-1.5 last:border-0">
-      <span className="text-[12px] text-faint">{k}</span>
-      <span className="font-mono text-[12.5px] text-ink">{v}</span>
+    <div className="glass-2 flex items-baseline justify-between gap-3 rounded-lg px-3.5 py-2.5">
+      <span className="shrink-0 text-[11.5px] text-faint">{k}</span>
+      <span className="truncate font-mono text-[12.5px] text-ink" title={String(v)}>{v}</span>
     </div>
   );
-}
-
-function verdictBorder(d) {
-  return {
-    APPROVED: "rgba(65,207,143,0.35)",
-    PENDING_REVIEW: "rgba(227,168,60,0.35)",
-    REJECTED: "rgba(229,72,77,0.35)",
-    MANUAL_ENTRY_REQUIRED: "rgba(167,139,250,0.35)",
-  }[d] || "var(--line)";
 }

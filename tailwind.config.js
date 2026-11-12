@@ -14,6 +14,7 @@ module.exports = {
         muted: "var(--muted)",
         faint: "var(--faint)",
         accent: "var(--accent)",
+        "accent-2": "var(--accent-2)",
         "accent-soft": "var(--accent-soft)",
         verdict: {
           approve: "var(--v-approve)",
@@ -21,14 +22,21 @@ module.exports = {
           reject: "var(--v-reject)",
           manual: "var(--v-manual)",
         },
+        approve: "var(--v-approve)",
+        pending: "var(--v-pending)",
+        reject: "var(--v-reject)",
+        manual: "var(--v-manual)",
       },
       fontFamily: {
         sans: "var(--font-sans)",
         mono: "var(--font-mono)",
       },
+      borderRadius: {
+        xl2: "22px",
+      },
       boxShadow: {
-        card: "0 1px 2px rgba(16,24,40,0.05), 0 4px 14px rgba(16,24,40,0.05)",
-        cardHover: "0 1px 2px rgba(16,24,40,0.06), 0 8px 24px rgba(16,24,40,0.09)",
+        card: "inset 0 1px 0 0 rgba(255,255,255,0.06), 0 24px 48px -24px rgba(0,0,0,0.6)",
+        glow: "0 0 40px -12px rgba(77,141,255,0.5)",
       },
     },
   },

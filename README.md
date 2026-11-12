@@ -4,7 +4,7 @@ A live, end-to-end web app that processes vendor invoices (PDFs), extracts the d
 
 Built as a submission for Zamp AI Problem Statement 1 (accounts-payable automation).
 
-**Stack:** Next.js (App Router) · Tailwind CSS (light, minimal theme) · Anthropic API for PDF extraction · embedded mock database (no setup, no credentials to persist).
+**Stack:** Next.js (App Router) · Tailwind CSS (dark glass command-center theme) · Anthropic API for PDF extraction · embedded mock database (no setup, no credentials to persist).
 
 ---
 

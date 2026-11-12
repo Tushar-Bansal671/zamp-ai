@@ -6,7 +6,7 @@ import "@fontsource/ibm-plex-mono/400.css";
 import "@fontsource/ibm-plex-mono/500.css";
 import "@fontsource/ibm-plex-mono/600.css";
 import "./globals.css";
-import Header from "@/components/Header";
+import Sidebar from "@/components/Sidebar";
 
 export const metadata = {
   title: "Zamp PS-1 · Invoice Decision Engine",
@@ -16,10 +16,10 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body className="min-h-screen bg-bg font-sans text-ink antialiased">
-        <Header />
-        <main>{children}</main>
+        <Sidebar />
+        <main className="lg:pl-16">{children}</main>
       </body>
     </html>
   );

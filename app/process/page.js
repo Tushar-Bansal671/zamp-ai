@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
-import { Terminal, StatusBadge, ExtractionSummary } from "@/components/ui";
+import { StatusBadge, ExtractionSummary, Terminal } from "@/components/ui";
 import SamplePicker from "@/components/SamplePicker";
 import { SAMPLES } from "@/lib/samples";
 
@@ -10,10 +10,17 @@ export default function ProcessPage() {
   return <ProcessView />;
 }
 
+const STAGES = [
+  { key: "ingest", title: "Ingest", desc: "Receive the invoice PDF" },
+  { key: "extract", title: "LLM extraction", desc: "Read fields via vision" },
+  { key: "validate", title: "Validation engine", desc: "Five deterministic rules" },
+  { key: "verdict", title: "Verdict", desc: "Decision + audit record" },
+];
+
 function ProcessView() {
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [file, setFile] = useState(null); // a chosen File
-  const [preloaded, setPreloaded] = useState(null); // a sample filename
+  const [file, setFile] = useState(null);
+  const [preloaded, setPreloaded] = useState(null);
   const [logs, setLogs] = useState([]);
   const [running, setRunning] = useState(false);
   const [extracted, setExtracted] = useState(null);
@@ -25,6 +32,13 @@ function ProcessView() {
   const inputRef = useRef(null);
   const fileRef = useRef(null);
 
+  // Derived pipeline state for the stepper
+  const [stageState, setStageState] = useState({ ingest: "idle", extract: "idle", validate: "idle", verdict: "idle" });
+
+  function setStage(key, state) {
+    setStageState((prev) => ({ ...prev, [key]: state }));
+  }
+
   function resetResults() {
     setLogs([]);
     setExtracted(null);
@@ -32,6 +46,7 @@ function ProcessView() {
     setDecision(null);
     setSummary("");
     setRunId(null);
+    setStageState({ ingest: "idle", extract: "idle", validate: "idle", verdict: "idle" });
   }
 
   function addLog(entry) {
@@ -55,7 +70,7 @@ function ProcessView() {
 
   async function run() {
     if (running) return;
-    let pdfBlob = null; // FormData.append needs a Blob/File, not raw bytes
+    let pdfBlob = null;
     let name = "";
 
     if (preloaded) {
@@ -66,6 +81,7 @@ function ProcessView() {
         setDecision("MANUAL_ENTRY_REQUIRED");
         setSummary("Sample file could not be loaded.");
         addLog({ level: "FAIL", title: "Sample file not found.", detail: preloaded });
+        setStage("ingest", "fail");
         return;
       }
       pdfBlob = await res.blob();
@@ -79,6 +95,7 @@ function ProcessView() {
 
     resetResults();
     setRunning(true);
+    setStage("ingest", "active");
     addLog({ level: "INFO", title: "Uploading invoice…", detail: name });
 
     const form = new FormData();
@@ -91,6 +108,7 @@ function ProcessView() {
     let finished = false;
     let sawDone = false;
     let sawDecision = false;
+    let extractDone = false;
 
     while (!finished) {
       const { value, done } = await reader.read();
@@ -107,14 +125,28 @@ function ProcessView() {
           continue;
         }
         if (ev.type === "log") {
-          addLog({ level: ev.level || "INFO", title: ev.title, detail: ev.detail, sub: ev.sub });
+          addLog({ level: ev.level || "INFO", title: ev.title, detail: ev.detail, sub: ev.sub, step: ev.step });
+          // Stepper driven by the stream's step numbers
+          if (ev.step === 1 && ev.level === "PASS") setStage("ingest", "done");
+          if (ev.step === 2) {
+            if (ev.level === "PASS") setStage("extract", "done");
+            else if (ev.level !== "INFO") setStage("extract", "active");
+          }
+          if (ev.step === 3) {
+            if (ev.level === "FAIL" && !sawDecision) setStage("validate", "active");
+          }
         } else if (ev.type === "extraction") {
           setExtracted(ev.data);
           setSource(ev.source);
+          extractDone = true;
+          setStage("extract", "done");
+          setStage("validate", "active");
         } else if (ev.type === "decision") {
           setDecision(ev.decision);
           setSummary(ev.summary);
           sawDecision = true;
+          setStage("validate", "done");
+          setStage("verdict", "done");
         } else if (ev.type === "done") {
           setRunId(ev.id);
           sawDone = true;
@@ -122,10 +154,13 @@ function ProcessView() {
           addLog({ level: "FAIL", title: "Engine error.", detail: ev.message });
           setDecision("MANUAL_ENTRY_REQUIRED");
           setSummary(ev.message || "The engine stopped unexpectedly.");
+          setStage("validate", "fail");
+          setStage("verdict", "done");
         } else if (ev.error && !sawDecision) {
           addLog({ level: "FAIL", title: "Engine returned an error.", detail: ev.error });
           setDecision("MANUAL_ENTRY_REQUIRED");
           setSummary(ev.error);
+          setStage("verdict", "done");
         }
       }
       finished = done;
@@ -138,7 +173,9 @@ function ProcessView() {
           ? "The run ended without a verdict."
           : "The engine stream closed before returning a verdict. Manual entry required."
       );
+      setStage("verdict", "done");
     }
+    if (!extractDone && !sawDecision) setStage("extract", "fail");
     setRunning(false);
   }
 
@@ -170,29 +207,74 @@ function ProcessView() {
   const hasFile = !!file || !!preloaded;
   const activeSample = preloaded ? SAMPLES.find((s) => s.file === preloaded) : null;
 
+  // Stepper visuals
+  const stateOf = (k) => stageState[k] || "idle";
+  const stageIcon = (state) => {
+    if (state === "done")
+      return (
+        <span className="grid h-6 w-6 place-items-center rounded-full text-approve" style={{ background: "rgba(52,211,153,0.14)", boxShadow: "0 0 12px -2px var(--v-approve)" }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l4 4L19 7" /></svg>
+        </span>
+      );
+    if (state === "active")
+      return (
+        <span className="relative grid h-6 w-6 place-items-center rounded-full text-accent" style={{ background: "rgba(77,141,255,0.18)" }}>
+          <span className="spin-ring absolute inset-0 rounded-full border border-accent" style={{ borderTopColor: "transparent", borderRightColor: "transparent" }} />
+          <span className="h-1.5 w-1.5 rounded-full bg-accent dot-pulse" />
+        </span>
+      );
+    if (state === "fail")
+      return (
+        <span className="grid h-6 w-6 place-items-center rounded-full text-reject" style={{ background: "rgba(251,113,133,0.14)" }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </span>
+      );
+    return <span className="h-6 w-6 rounded-full border-2 border-line" />;
+  };
+
   return (
-    <div className="mx-auto max-w-6xl px-5 py-8">
+    <div className="mx-auto max-w-6xl px-5 py-8 lg:px-8">
+      {/* Header */}
       <div className="rise flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-[26px] font-semibold tracking-tight">Process invoice</h1>
-          <p className="mt-1 max-w-xl text-[13.5px] leading-relaxed text-muted">
-            Drop a vendor invoice PDF, or start from a built-in sample, and watch every step play
-            out in the live terminal.
+          <h1 className="text-[30px] font-semibold tracking-tight">Process invoice</h1>
+          <p className="mt-1.5 max-w-xl text-[13.5px] leading-relaxed text-muted">
+            Drop a vendor invoice PDF — or start from a sample — and follow every stage as the engine
+            executes it, live.
           </p>
         </div>
         {runId ? (
-          <Link
-            href={`/audit/${runId}`}
-            className="btn-ghost font-mono text-[12px]"
-          >
+          <Link href={`/audit/${runId}`} className="btn-ghost font-mono text-[12px]">
             Open audit view →
           </Link>
         ) : null}
       </div>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-2">
-        {/* Left: input + result */}
+      {/* Stage pipeline strip */}
+      <div className="glass rise mt-6 flex flex-wrap items-center gap-1 px-4 py-3" style={{ animationDelay: "40ms" }}>
+        {STAGES.map((s, i) => (
+          <div key={s.key} className="flex items-center">
+            <div className="flex items-center gap-2.5 px-3 py-1.5" style={{ opacity: stateOf(s.key) === "idle" ? 0.5 : 1 }}>
+              {stageIcon(stateOf(s.key))}
+              <div>
+                <div className="text-[12.5px] font-medium leading-tight">{s.title}</div>
+                <div className="text-[10.5px] text-faint leading-tight">{s.desc}</div>
+              </div>
+            </div>
+            {i < STAGES.length - 1 ? (
+              <span className="mx-1 h-px w-6 bg-line sm:w-10" />
+            ) : null}
+          </div>
+        ))}
+        <div className="ml-auto pr-1 font-mono text-[10px] uppercase tracking-widest text-faint">
+          {decision ? "complete" : running ? "executing" : "ready"}
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        {/* Left: input + verdict */}
         <div className="space-y-4">
+          {/* Dropzone */}
           <section
             onDragOver={(e) => {
               e.preventDefault();
@@ -200,47 +282,37 @@ function ProcessView() {
             }}
             onDragLeave={() => setDrag(false)}
             onDrop={onDrop}
-            className={`relative rounded-xl border-2 border-dashed p-6 transition-all ${
-              drag ? "border-accent bg-accent-soft" : "border-line bg-panel"
-            }`}
+            className={`glass rise p-6 transition-all duration-200 ${drag ? "dropzone-active" : ""}`}
           >
-            {preloaded && activeSample ? (
-              <div className="flex items-center gap-3">
-                <span
-                  className="grid h-11 w-11 shrink-0 place-items-center rounded-lg font-mono text-[11px] uppercase"
-                  style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
-                >
-                  PDF
-                </span>
-                <div className="min-w-0">
-                  <div className="truncate text-[14px] font-medium">{activeSample.invoice}</div>
-                  <div className="mt-0.5 truncate text-[12px] text-muted">{activeSample.label}</div>
-                </div>
-              </div>
-            ) : file ? (
-              <div className="flex items-center gap-3">
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-panel-2 font-mono text-[10px] uppercase text-faint">
-                  PDF
-                </span>
-                <div className="min-w-0">
-                  <div className="truncate text-[14px] font-medium">{file.name}</div>
-                  <div className="text-[12px] text-faint">{(file.size / 1024).toFixed(1)} KB</div>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center gap-3">
-                <span
-                  className="grid h-11 w-11 shrink-0 place-items-center rounded-lg font-mono text-[16px]"
-                  style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
-                >
-                  ⇡
-                </span>
-                <div>
-                  <div className="text-[14px] font-medium">Drop the invoice PDF here</div>
-                  <div className="text-[12px] text-muted">Or browse your files — PDFs only.</div>
-                </div>
-              </div>
-            )}
+            <div className="flex items-center gap-4">
+              {preloaded && activeSample ? (
+                <>
+                  <FileTile label="PDF" sub="sample" />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-[15px] font-semibold">{activeSample.invoice}</div>
+                    <div className="mt-0.5 truncate text-[12.5px] text-muted">{activeSample.label}</div>
+                  </div>
+                </>
+              ) : file ? (
+                <>
+                  <FileTile label="PDF" sub="upload" accent />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-[15px] font-semibold">{file.name}</div>
+                    <div className="text-[12.5px] text-faint">{(file.size / 1024).toFixed(1)} KB · ready</div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <FileTile accent icon>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M12 16V4M7 9l5-5 5 5" /><path d="M4 20h16" /></svg>
+                  </FileTile>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[15px] font-semibold">Drop the invoice PDF here</div>
+                    <div className="text-[12.5px] text-muted">or browse · PDF only</div>
+                  </div>
+                </>
+              )}
+            </div>
 
             <input
               ref={inputRef}
@@ -251,69 +323,47 @@ function ProcessView() {
             />
 
             <div className="mt-5 flex flex-wrap items-center gap-2">
-              <button
-                onClick={() => inputRef.current?.click()}
-                disabled={running}
-                className="btn-ghost disabled:opacity-40"
-              >
+              <button onClick={() => inputRef.current?.click()} disabled={running} className="btn-ghost disabled:opacity-40">
                 Choose file
               </button>
-
-              <button
-                onClick={() => setPickerOpen(true)}
-                disabled={running}
-                className="btn-accent disabled:opacity-40"
-              >
-                Show a sample invoice
+              <button onClick={() => setPickerOpen(true)} disabled={running} className="btn-accent disabled:opacity-40">
+                Sample invoices
               </button>
-
-              <button
-                onClick={run}
-                disabled={!hasFile || running}
-                className="btn-primary text-[13px] disabled:opacity-35"
-              >
+              <button onClick={run} disabled={!hasFile || running} className="btn-primary text-[13px] disabled:opacity-35 disabled:shadow-none">
                 {running ? "Running…" : hasFile ? "Run engine" : "Load an invoice"}
               </button>
-
               {hasFile ? (
-                <button
-                  onClick={clearInput}
-                  disabled={running}
-                  className="ml-auto rounded-lg px-2 py-2 font-mono text-[11px] text-faint transition-colors hover:text-reject"
-                >
+                <button onClick={clearInput} disabled={running} className="ml-auto rounded-lg px-2 py-2 font-mono text-[11px] text-faint transition-colors hover:text-reject">
                   clear
                 </button>
               ) : null}
             </div>
           </section>
 
-          {/* Verdict card */}
+          {/* Verdict */}
           {decision ? (
             <section
-              className="line-in rounded-xl border bg-panel p-5 shadow-card"
-              style={{ borderColor: verdictBorder(decision) }}
+              className="glass verdict-glow line-in overflow-hidden p-6"
+              data-verdict={decision}
             >
               <div className="flex items-center justify-between gap-3">
-                <StatusBadge status={decision} />
+                <StatusBadge status={decision} size="lg" />
                 {source ? (
-                  <span className="font-mono text-[11px] text-faint">extraction: {source}</span>
+                  <span className="font-mono text-[10.5px] uppercase tracking-wider text-faint">extraction · {source}</span>
                 ) : null}
               </div>
               {summary ? (
-                <p className="mt-3 whitespace-pre-line text-[13.5px] leading-relaxed text-muted">{summary}</p>
+                <p className="mt-4 whitespace-pre-line text-[14px] leading-relaxed text-muted">{summary}</p>
               ) : null}
 
               {extracted ? (
-                <div className="mt-4 rounded-lg border border-line-soft bg-panel-2 p-4">
+                <div className="mt-5 glass-2 p-4">
                   <ExtractionSummary data={extracted} />
                 </div>
               ) : null}
 
               {runId ? (
-                <Link
-                  href={`/audit/${runId}`}
-                  className="btn-primary mt-4"
-                >
+                <Link href={`/audit/${runId}`} className="btn-primary mt-5">
                   Open side-by-side audit
                 </Link>
               ) : null}
@@ -322,33 +372,35 @@ function ProcessView() {
         </div>
 
         {/* Right: live terminal */}
-        <section className="rise flex h-[560px] flex-col overflow-hidden rounded-xl border border-line bg-panel shadow-card" style={{ animationDelay: "80ms" }}>
-          <div className="flex items-center justify-between border-b border-line px-4 py-3">
-            <div className="font-mono text-[11px] uppercase tracking-[0.14em] text-faint">
-              Execution terminal
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-line" />
-              <span className="h-2 w-2 rounded-full bg-line" />
-              <span className="h-2 w-2 rounded-full bg-line" />
-            </div>
-          </div>
-          <div className="min-h-0 flex-1">
+        <div className="rise lg:sticky lg:top-8 lg:self-start" style={{ animationDelay: "80ms" }}>
+          <div className="h-[560px]">
             <Terminal logs={logs} running={running} />
           </div>
-        </section>
+        </div>
       </div>
 
       <SamplePicker open={pickerOpen} onClose={() => setPickerOpen(false)} onPick={pickSample} />
     </div>
   );
+}
 
-  function verdictBorder(d) {
-    return {
-      APPROVED: "rgba(21,138,79,0.4)",
-      PENDING_REVIEW: "rgba(180,83,9,0.4)",
-      REJECTED: "rgba(217,45,32,0.4)",
-      MANUAL_ENTRY_REQUIRED: "rgba(124,58,237,0.4)",
-    }[d] || "var(--line)";
-  }
+function FileTile({ children, accent = false, label = "PDF", sub }) {
+  return (
+    <span
+      className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border font-mono"
+      style={{
+        color: accent ? "var(--accent)" : "var(--faint)",
+        background: accent ? "var(--accent-soft)" : "var(--panel-2)",
+        borderColor: accent ? "rgba(77,141,255,0.4)" : "var(--line)",
+        boxShadow: accent ? "0 0 20px -6px rgba(77,141,255,0.5)" : "none",
+      }}
+    >
+      {children || (
+        <span className="text-center uppercase leading-tight">
+          <span className="block text-[11px]">{label}</span>
+          {sub ? <span className="mt-0.5 block text-[8.5px] text-faint">{sub}</span> : null}
+        </span>
+      )}
+    </span>
+  );
 }
