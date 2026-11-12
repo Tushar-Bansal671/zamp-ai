@@ -1,0 +1,164 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+
+  /* Base */
+  --bg: #0e1216;
+  --panel: #141a21;
+  --panel-2: #19212a;
+  --line: #24303c;
+  --line-soft: #1c2530;
+
+  /* Ink */
+  --ink: #e9eff4;
+  --muted: #93a1b0;
+  --faint: #5d6b7a;
+
+  /* Engine accent */
+  --accent: #57a9f5;
+
+  /* Verdict colors */
+  --v-approve: #41cf8f;
+  --v-pending: #e3a83c;
+  --v-reject: #e5484d;
+  --v-manual: #a78bfa;
+
+  --font-sans: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+}
+
+/* A calm ambient glow behind everything — one soft light, not a gradient wash. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(900px 480px at 78% -8%, rgba(87, 169, 245, 0.11), transparent 62%),
+    radial-gradient(760px 420px at -6% 34%, rgba(65, 207, 143, 0.05), transparent 60%);
+}
+
+::selection {
+  background: rgba(87, 169, 245, 0.28);
+}
+
+/* Slim scrollbars for the terminal + JSON panes */
+.slim-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.slim-scroll::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 8px;
+}
+.slim-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@layer components {
+  /* Shared primary button (used across views) */
+  .btn-primary {
+    display: inline-block;
+    border-radius: 6px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #081018;
+    background: var(--accent);
+    box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.03) inset, 0 8px 24px rgba(0, 0, 0, 0.35);
+    transition:
+      transform 120ms ease,
+      filter 160ms ease;
+  }
+  .btn-primary:hover {
+    filter: brightness(1.07);
+  }
+  .btn-primary:active {
+    transform: scale(0.98);
+  }
+  .btn-primary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+/* Live cursor in the execution terminal */
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+.cursor-blink {
+  animation: blink 1.05s steps(1) infinite;
+}
+
+@keyframes soft-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+.dot-pulse {
+  animation: soft-pulse 1.6s ease-in-out infinite;
+}
+
+/* Gentle one-time reveals on page load (stagger via animation-delay). */
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.rise {
+  animation: rise-in 0.45s ease-out both;
+}
+
+/* New log lines fade in quickly (feedback for an action, not decoration) */
+@keyframes line-in {
+  from { opacity: 0; transform: translateY(3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.line-in {
+  animation: line-in 0.22s ease-out;
+}
+
+/* Modal entrance */
+@keyframes modal-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.modal-fade {
+  animation: modal-fade 0.18s ease-out both;
+}
+@keyframes modal-pop {
+  from { opacity: 0; transform: translateY(10px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.modal-pop {
+  animation: modal-pop 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor-blink,
+  .dot-pulse,
+  .line-in,
+  .rise,
+  .modal-fade,
+  .modal-pop {
+    animation: none;
+  }
+  .rise,
+  .modal-pop {
+    opacity: 1;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
