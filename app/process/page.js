@@ -183,7 +183,7 @@ function ProcessView() {
         {runId ? (
           <Link
             href={`/audit/${runId}`}
-            className="rounded-sm border border-line px-3.5 py-2 font-mono text-[12px] text-muted transition-colors hover:border-accent hover:text-ink"
+            className="btn-ghost font-mono text-[12px]"
           >
             Open audit view →
           </Link>
@@ -200,15 +200,15 @@ function ProcessView() {
             }}
             onDragLeave={() => setDrag(false)}
             onDrop={onDrop}
-            className={`relative rounded-lg border-2 border-dashed p-6 transition-all ${
-              drag ? "border-accent bg-panel-2" : "border-line bg-panel"
+            className={`relative rounded-xl border-2 border-dashed p-6 transition-all ${
+              drag ? "border-accent bg-accent-soft" : "border-line bg-panel"
             }`}
           >
             {preloaded && activeSample ? (
               <div className="flex items-center gap-3">
                 <span
-                  className="grid h-11 w-11 shrink-0 place-items-center rounded-md font-mono text-[11px] uppercase"
-                  style={{ background: "rgba(87,169,245,0.12)", color: "var(--accent)" }}
+                  className="grid h-11 w-11 shrink-0 place-items-center rounded-lg font-mono text-[11px] uppercase"
+                  style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
                 >
                   PDF
                 </span>
@@ -230,8 +230,8 @@ function ProcessView() {
             ) : (
               <div className="flex items-center gap-3">
                 <span
-                  className="grid h-11 w-11 shrink-0 place-items-center rounded-md font-mono text-[16px]"
-                  style={{ background: "rgba(87,169,245,0.12)", color: "var(--accent)" }}
+                  className="grid h-11 w-11 shrink-0 place-items-center rounded-lg font-mono text-[16px]"
+                  style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
                 >
                   ⇡
                 </span>
@@ -254,7 +254,7 @@ function ProcessView() {
               <button
                 onClick={() => inputRef.current?.click()}
                 disabled={running}
-                className="rounded-sm border border-line px-3 py-2 text-[13px] font-medium text-muted transition-colors hover:text-ink disabled:opacity-40"
+                className="btn-ghost disabled:opacity-40"
               >
                 Choose file
               </button>
@@ -262,8 +262,7 @@ function ProcessView() {
               <button
                 onClick={() => setPickerOpen(true)}
                 disabled={running}
-                className="rounded-sm border px-3 py-2 text-[13px] font-medium transition-colors hover:bg-panel-2 disabled:opacity-40"
-                style={{ borderColor: "rgba(87,169,245,0.4)", color: "var(--accent)" }}
+                className="btn-accent disabled:opacity-40"
               >
                 Show a sample invoice
               </button>
@@ -271,8 +270,7 @@ function ProcessView() {
               <button
                 onClick={run}
                 disabled={!hasFile || running}
-                className="rounded-sm px-4 py-2 text-[13px] font-semibold text-[#081018] transition-transform active:scale-[0.98] disabled:opacity-35"
-                style={{ background: "var(--accent)" }}
+                className="btn-primary text-[13px] disabled:opacity-35"
               >
                 {running ? "Running…" : hasFile ? "Run engine" : "Load an invoice"}
               </button>
@@ -281,7 +279,7 @@ function ProcessView() {
                 <button
                   onClick={clearInput}
                   disabled={running}
-                  className="ml-auto rounded-sm px-2 py-2 font-mono text-[11px] text-faint transition-colors hover:text-reject"
+                  className="ml-auto rounded-lg px-2 py-2 font-mono text-[11px] text-faint transition-colors hover:text-reject"
                 >
                   clear
                 </button>
@@ -292,7 +290,7 @@ function ProcessView() {
           {/* Verdict card */}
           {decision ? (
             <section
-              className="line-in rounded-lg border bg-panel p-5 shadow-card"
+              className="line-in rounded-xl border bg-panel p-5 shadow-card"
               style={{ borderColor: verdictBorder(decision) }}
             >
               <div className="flex items-center justify-between gap-3">
@@ -306,7 +304,7 @@ function ProcessView() {
               ) : null}
 
               {extracted ? (
-                <div className="mt-4 rounded-md border border-line-soft bg-panel-2 p-4">
+                <div className="mt-4 rounded-lg border border-line-soft bg-panel-2 p-4">
                   <ExtractionSummary data={extracted} />
                 </div>
               ) : null}
@@ -324,7 +322,7 @@ function ProcessView() {
         </div>
 
         {/* Right: live terminal */}
-        <section className="rise flex h-[560px] flex-col overflow-hidden rounded-lg border border-line bg-panel shadow-card" style={{ animationDelay: "80ms" }}>
+        <section className="rise flex h-[560px] flex-col overflow-hidden rounded-xl border border-line bg-panel shadow-card" style={{ animationDelay: "80ms" }}>
           <div className="flex items-center justify-between border-b border-line px-4 py-3">
             <div className="font-mono text-[11px] uppercase tracking-[0.14em] text-faint">
               Execution terminal
@@ -347,10 +345,10 @@ function ProcessView() {
 
   function verdictBorder(d) {
     return {
-      APPROVED: "rgba(65,207,143,0.35)",
-      PENDING_REVIEW: "rgba(227,168,60,0.35)",
-      REJECTED: "rgba(229,72,77,0.35)",
-      MANUAL_ENTRY_REQUIRED: "rgba(167,139,250,0.35)",
+      APPROVED: "rgba(21,138,79,0.4)",
+      PENDING_REVIEW: "rgba(180,83,9,0.4)",
+      REJECTED: "rgba(217,45,32,0.4)",
+      MANUAL_ENTRY_REQUIRED: "rgba(124,58,237,0.4)",
     }[d] || "var(--line)";
   }
 }

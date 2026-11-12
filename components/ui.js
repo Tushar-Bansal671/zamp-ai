@@ -5,18 +5,18 @@ import { useEffect, useRef } from "react";
 /** Minimal, consistent UI primitives for the dashboard. */
 
 const STATUS_STYLES = {
-  APPROVED: { color: "var(--v-approve)", bg: "rgba(65,207,143,0.10)", label: "Approved" },
-  PENDING_REVIEW: { color: "var(--v-pending)", bg: "rgba(227,168,60,0.10)", label: "Pending review" },
-  REJECTED: { color: "var(--v-reject)", bg: "rgba(229,72,77,0.10)", label: "Rejected" },
-  MANUAL_ENTRY_REQUIRED: { color: "var(--v-manual)", bg: "rgba(167,139,250,0.10)", label: "Manual entry" },
+  APPROVED: { color: "var(--v-approve)", bg: "rgba(21,138,79,0.09)", border: "rgba(21,138,79,0.25)", label: "Approved" },
+  PENDING_REVIEW: { color: "var(--v-pending)", bg: "rgba(180,83,9,0.09)", border: "rgba(180,83,9,0.25)", label: "Pending review" },
+  REJECTED: { color: "var(--v-reject)", bg: "rgba(217,45,32,0.08)", border: "rgba(217,45,32,0.25)", label: "Rejected" },
+  MANUAL_ENTRY_REQUIRED: { color: "var(--v-manual)", bg: "rgba(124,58,237,0.08)", border: "rgba(124,58,237,0.25)", label: "Manual entry" },
 };
 
 export function StatusBadge({ status }) {
   const meta = STATUS_STYLES[status] || STATUS_STYLES.MANUAL_ENTRY_REQUIRED;
   return (
     <span
-      className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-sm border px-2 py-0.5 font-mono text-[11px] font-medium uppercase tracking-wide"
-      style={{ color: meta.color, backgroundColor: meta.bg, borderColor: meta.color + "44" }}
+      className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-0.5 font-mono text-[11px] font-medium uppercase tracking-wide"
+      style={{ color: meta.color, backgroundColor: meta.bg, borderColor: meta.border }}
     >
       <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: meta.color }} />
       {meta.label}
@@ -25,10 +25,10 @@ export function StatusBadge({ status }) {
 }
 
 const LOG_TONE = {
-  PASS: { color: "var(--v-approve)", marker: "✓" },
-  FAIL: { color: "var(--v-reject)", marker: "✕" },
-  NOTE: { color: "var(--v-pending)", marker: "»" },
-  INFO: { color: "var(--muted)", marker: "›" },
+  PASS: { color: "var(--term-approve)", marker: "✓" },
+  FAIL: { color: "var(--term-fail)", marker: "✕" },
+  NOTE: { color: "var(--term-note)", marker: "»" },
+  INFO: { color: "var(--term-mute)", marker: "›" },
 };
 
 export function LogLine({ log }) {
@@ -40,10 +40,18 @@ export function LogLine({ log }) {
       </span>
       <div className="min-w-0">
         <div>
-          {log.sub ? <span className="mr-1.5 rounded-sm bg-panel-2 px-1 py-px text-[10px] text-faint">{log.sub}</span> : null}
+          {log.sub ? (
+            <span className="mr-1.5 rounded bg-white/10 px-1 py-px text-[10px]" style={{ color: "var(--term-mute)" }}>
+              {log.sub}
+            </span>
+          ) : null}
           <span style={{ color: tone.color }}>{log.title}</span>
         </div>
-        {log.detail ? <div className="text-[11.5px] text-faint">{log.detail}</div> : null}
+        {log.detail ? (
+          <div className="text-[11.5px]" style={{ color: "var(--term-mute)" }}>
+            {log.detail}
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -56,9 +64,9 @@ export function Terminal({ logs, running }) {
   }, [logs.length, running]);
 
   return (
-    <div ref={boxRef} className="slim-scroll h-full overflow-y-auto bg-[#0b0e12]">
+    <div ref={boxRef} className="slim-scroll h-full overflow-y-auto" style={{ background: "var(--term-bg)" }}>
       {logs.length === 0 ? (
-        <div className="px-4 py-3 font-mono text-[12.5px] text-faint">
+        <div className="px-4 py-3 font-mono text-[12.5px]" style={{ color: "var(--term-mute)" }}>
           {running
             ? "Waiting for the first step…"
             : "The execution terminal logs every engine step as it happens."}
@@ -67,9 +75,17 @@ export function Terminal({ logs, running }) {
         logs.map((l, i) => <LogLine key={i} log={l} />)
       )}
       {running ? (
-        <div className="flex items-center gap-2 px-4 py-2 font-mono text-[12.5px] text-faint">
-          <span className="dot-pulse">●</span> running
-          <span className="cursor-blink">▍</span>
+        <div
+          className="flex items-center gap-2 px-4 py-2 font-mono text-[12.5px]"
+          style={{ color: "var(--term-mute)" }}
+        >
+          <span className="dot-pulse" style={{ color: "var(--term-approve)" }}>
+            ●
+          </span>
+          running
+          <span className="cursor-blink" style={{ color: "var(--term-ink)" }}>
+            ▍
+          </span>
         </div>
       ) : null}
     </div>
@@ -130,7 +146,7 @@ export function ExtractionSummary({ data, title = "What we found on this invoice
             <dt className="text-[11.5px] text-faint">{k}</dt>
             <dd
               className={`mt-0.5 truncate text-[13px] ${
-                typeof v === "string" && v.startsWith("Not found") ? "text-faint italic" : "text-ink"
+                typeof v === "string" && v.startsWith("Not found") ? "italic text-faint" : "text-ink"
               }`}
               title={typeof v === "string" ? v : undefined}
             >

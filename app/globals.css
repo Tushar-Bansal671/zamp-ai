@@ -3,28 +3,38 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
-  /* Base */
-  --bg: #0e1216;
-  --panel: #141a21;
-  --panel-2: #19212a;
-  --line: #24303c;
-  --line-soft: #1c2530;
+  /* Base — light, minimal, Zamp-style */
+  --bg: #f5f7fa;
+  --panel: #ffffff;
+  --panel-2: #f1f4f9;
+  --line: #e4e9f0;
+  --line-soft: #edf1f7;
 
   /* Ink */
-  --ink: #e9eff4;
-  --muted: #93a1b0;
-  --faint: #5d6b7a;
+  --ink: #101828;
+  --muted: #5c6a7f;
+  --faint: #98a4b5;
 
-  /* Engine accent */
-  --accent: #57a9f5;
+  /* Engine accent — Zamp blue */
+  --accent: #2f6bff;
+  --accent-soft: rgba(47, 107, 255, 0.08);
 
-  /* Verdict colors */
-  --v-approve: #41cf8f;
-  --v-pending: #e3a83c;
-  --v-reject: #e5484d;
-  --v-manual: #a78bfa;
+  /* Verdict colors — dark tones that read well on light surfaces */
+  --v-approve: #158a4f;
+  --v-pending: #b45309;
+  --v-reject: #d92d20;
+  --v-manual: #7c3aed;
+
+  /* Console tones — the execution terminal stays a dark surface */
+  --term-bg: #0d1117;
+  --term-line: #20293a;
+  --term-ink: #d7e0ea;
+  --term-mute: #8b98a9;
+  --term-approve: #4ade80;
+  --term-fail: #f87171;
+  --term-note: #fbbf24;
 
   --font-sans: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
@@ -38,7 +48,7 @@ body {
   background: var(--bg);
 }
 
-/* A calm ambient glow behind everything — one soft light, not a gradient wash. */
+/* Soft ambient wash behind everything — very faint, keeps the page airy. */
 body::before {
   content: "";
   position: fixed;
@@ -46,12 +56,12 @@ body::before {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(900px 480px at 78% -8%, rgba(87, 169, 245, 0.11), transparent 62%),
-    radial-gradient(760px 420px at -6% 34%, rgba(65, 207, 143, 0.05), transparent 60%);
+    radial-gradient(1000px 520px at 85% -10%, rgba(47, 107, 255, 0.07), transparent 62%),
+    radial-gradient(700px 420px at -8% 40%, rgba(21, 138, 79, 0.045), transparent 60%);
 }
 
 ::selection {
-  background: rgba(87, 169, 245, 0.28);
+  background: rgba(47, 107, 255, 0.18);
 }
 
 /* Slim scrollbars for the terminal + JSON panes */
@@ -68,22 +78,28 @@ body::before {
 }
 
 @layer components {
-  /* Shared primary button (used across views) */
+  /* Shared primary button — solid ink, Zamp's pill-button feel */
   .btn-primary {
     display: inline-block;
-    border-radius: 6px;
-    padding: 10px 16px;
+    border-radius: 9px;
+    padding: 10px 18px;
     font-size: 14px;
     font-weight: 600;
-    color: #081018;
-    background: var(--accent);
-    box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.03) inset, 0 8px 24px rgba(0, 0, 0, 0.35);
+    color: #ffffff;
+    background: var(--ink);
+    box-shadow:
+      0 1px 2px rgba(16, 24, 40, 0.08),
+      0 6px 16px rgba(16, 24, 40, 0.1);
     transition:
       transform 120ms ease,
-      filter 160ms ease;
+      filter 160ms ease,
+      box-shadow 160ms ease;
   }
   .btn-primary:hover {
-    filter: brightness(1.07);
+    filter: brightness(1.25);
+    box-shadow:
+      0 1px 2px rgba(16, 24, 40, 0.1),
+      0 10px 24px rgba(16, 24, 40, 0.16);
   }
   .btn-primary:active {
     transform: scale(0.98);
@@ -91,6 +107,54 @@ body::before {
   .btn-primary:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
+  }
+
+  /* Secondary button — quiet outline, elevates on hover */
+  .btn-ghost {
+    display: inline-block;
+    border-radius: 9px;
+    padding: 9px 16px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    transition:
+      color 140ms ease,
+      border-color 140ms ease,
+      background 140ms ease,
+      transform 120ms ease;
+  }
+  .btn-ghost:hover {
+    color: var(--ink);
+    border-color: #cfd8e4;
+    background: var(--panel-2);
+  }
+  .btn-ghost:active {
+    transform: scale(0.98);
+  }
+
+  /* Accent-outline button (samples, secondary actions) */
+  .btn-accent {
+    display: inline-block;
+    border-radius: 9px;
+    padding: 9px 16px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border: 1px solid rgba(47, 107, 255, 0.25);
+    transition:
+      background 140ms ease,
+      border-color 140ms ease,
+      transform 120ms ease;
+  }
+  .btn-accent:hover {
+    background: rgba(47, 107, 255, 0.14);
+    border-color: rgba(47, 107, 255, 0.5);
+  }
+  .btn-accent:active {
+    transform: scale(0.98);
   }
 }
 

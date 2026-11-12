@@ -40,11 +40,11 @@ export default function SamplePicker({ open, onClose, onPick }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm modal-fade"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 modal-fade" style={{ background: "rgba(24,33,52,0.4)", backdropFilter: "blur(4px)" }}
       onClick={onClose}
     >
       <div
-        className="modal-pop grid w-full max-w-4xl max-h-[92vh] overflow-y-auto overflow-x-hidden rounded-lg border border-line bg-panel shadow-card md:overflow-hidden md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]"
+        className="modal-pop grid w-full max-w-4xl max-h-[92vh] overflow-y-auto overflow-x-hidden rounded-xl border border-line bg-panel shadow-card md:overflow-hidden md:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Left: the list */}
@@ -62,10 +62,10 @@ export default function SamplePicker({ open, onClose, onPick }) {
                 <button
                   key={s.file}
                   onClick={() => setActive(s.file)}
-                  className={`mb-1.5 flex w-full items-start gap-3 rounded-md border px-3 py-2.5 text-left transition-all ${
+                  className={`mb-1.5 flex w-full items-start gap-3 rounded-lg border px-3 py-2.5 text-left transition-all ${
                     sel ? "bg-panel-2" : "border-transparent hover:border-line hover:bg-panel-2"
                   }`}
-                  style={sel ? { borderColor: "rgba(87,169,245,0.5)" } : undefined}
+                  style={sel ? { borderColor: "rgba(47,107,255,0.45)", background: "var(--panel-2)" } : undefined}
                 >
                   <span
                     className="mt-1 h-2 w-2 shrink-0 rounded-full"
@@ -76,7 +76,7 @@ export default function SamplePicker({ open, onClose, onPick }) {
                     <span className="mt-0.5 block truncate font-mono text-[11px] text-faint">
                       {s.invoice} · {s.vendor}
                     </span>
-                    <span className="mt-1 inline-block rounded-sm px-1.5 py-px font-mono text-[10px] uppercase tracking-wide" style={{ color: toneOf(s.expect) }}>
+                    <span className="mt-1 inline-block rounded px-1.5 py-px font-mono text-[10px] uppercase tracking-wide" style={{ color: toneOf(s.expect) }}>
                       {s.expect}
                     </span>
                   </span>
@@ -94,7 +94,7 @@ export default function SamplePicker({ open, onClose, onPick }) {
               {chosen.expect}
             </span>
           </div>
-          <div className="relative min-h-0 flex-1 bg-[#0b0e12]">
+          <div className="relative min-h-0 flex-1" style={{ background: "var(--term-bg)" }}>
             <iframe
               key={chosen.file}
               src={`/samples/${encodeURIComponent(chosen.file)}`}

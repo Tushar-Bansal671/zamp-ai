@@ -37,7 +37,7 @@ export default function AuditPage() {
         </p>
         <Link
           href="/"
-          className="mt-4 inline-block rounded-sm border border-line px-3.5 py-2 font-mono text-[12px] text-muted hover:border-accent hover:text-ink"
+          className="btn-ghost mt-4 font-mono text-[12px]"
         >
           ← Back to the dashboard
         </Link>
@@ -63,7 +63,7 @@ export default function AuditPage() {
     <div className="mx-auto max-w-6xl px-5 py-8">
       {/* Verdict banner */}
       <div
-        className="rise flex flex-wrap items-center justify-between gap-4 rounded-lg border bg-panel p-5 shadow-card"
+        className="rise flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-panel p-5 shadow-card"
         style={{ borderColor: verdictBorder(verdict) }}
       >
         <div className="min-w-0">
@@ -86,7 +86,7 @@ export default function AuditPage() {
           </Link>
           <Link
             href="/"
-            className="rounded-sm border border-line px-3 py-1.5 font-mono text-[11.5px] text-muted hover:text-ink"
+            className="btn-ghost font-mono text-[11.5px]"
           >
             Dashboard
           </Link>
@@ -96,25 +96,25 @@ export default function AuditPage() {
       {/* Split-screen audit */}
       <div className="rise mt-5 grid gap-4 lg:grid-cols-2" style={{ animationDelay: "90ms" }}>
         {/* Left: source document */}
-        <section className="flex flex-col overflow-hidden rounded-lg border border-line bg-panel shadow-card">
+        <section className="flex flex-col overflow-hidden rounded-xl border border-line bg-panel shadow-card">
           <div className="flex items-center justify-between border-b border-line px-4 py-3">
             <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-faint">Source document</span>
             <span className="font-mono text-[11px] text-faint">{run.fileName}</span>
           </div>
-          <div className="min-h-[480px] flex-1 bg-[#0b0e12]">
+          <div className="min-h-[480px] flex-1" style={{ background: "var(--term-bg)" }}>
             <iframe src={run.pdfUrl || ""} title="Invoice PDF" className="h-full w-full" style={{ minHeight: 480, border: 0 }} />
           </div>
         </section>
 
         {/* Right: extraction + reasoning */}
         <section className="flex flex-col gap-4">
-          <div className="rounded-md border border-line bg-panel p-4 shadow-card">
+          <div className="rounded-lg border border-line bg-panel p-4 shadow-card">
             <div className="px-1">
               <ExtractionSummary data={run.extracted} title="What we found on this invoice" />
             </div>
           </div>
 
-          <div className="rounded-md border border-line bg-panel p-4 shadow-card">
+          <div className="rounded-lg border border-line bg-panel p-4 shadow-card">
             <h2 className="font-mono text-[11px] uppercase tracking-[0.14em] text-faint">Reasoning log</h2>
             <ol className="mt-3 space-y-2.5">
               {engineSteps.map((s, i) => (
@@ -144,7 +144,7 @@ export default function AuditPage() {
           </div>
 
           {(po || suggested) ? (
-            <div className="rounded-md border border-line bg-panel p-4 shadow-card">
+            <div className="rounded-lg border border-line bg-panel p-4 shadow-card">
               <h2 className="font-mono text-[11px] uppercase tracking-[0.14em] text-faint">
                 {(po && "Matched PO") || (suggested && "Suggested PO")}
               </h2>

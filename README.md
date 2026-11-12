@@ -1,8 +1,10 @@
-# Ledgerline — Automated Invoice Decision Engine
+# Zamp PS-1 — Automated Invoice Decision Engine
 
 A live, end-to-end web app that processes vendor invoices (PDFs), extracts the data with an LLM, cross-references a purchase-order database, and makes a deterministic approval decision — with a full audit trail for a human to verify the AI's work.
 
-**Stack:** Next.js (App Router) · Tailwind CSS (dark theme) · Anthropic API for PDF extraction · embedded mock database (no setup, no credentials to persist).
+Built as a submission for Zamp AI Problem Statement 1 (accounts-payable automation).
+
+**Stack:** Next.js (App Router) · Tailwind CSS (light, minimal theme) · Anthropic API for PDF extraction · embedded mock database (no setup, no credentials to persist).
 
 ---
 
@@ -64,7 +66,7 @@ npm run build
 ANTHROPIC_API_KEY=sk-ant-... ANTHROPIC_MODEL=claude-3-5-haiku-20241022 npm start
 ```
 
-Run it behind a process manager (systemd, `pm2 start npm --name ledgerline -- start`) so the process stays up. This is the mode in which every feature — uploads, the shared history, the side-by-side audit, PO balance bookkeeping — works completely, as designed.
+Run it behind a process manager (systemd, `pm2 start npm --name zamp-ps1 -- start`) so the process stays up. This is the mode in which every feature — uploads, the shared history, the side-by-side audit, PO balance bookkeeping — works completely, as designed.
 
 **Vercel (serverless).** Set `ANTHROPIC_API_KEY` (and optionally `ANTHROPIC_MODEL`) in the project's environment variables; the API routes are Node Functions by default and deploy with no config. Because each function runs in an isolated, possibly-fresh instance, the `globalThis` stores are **per-instance**: a single invoice is processed and its audit link works within one warm instance, but history does not reliably survive across separate invocations. That's the honest limit of an in-memory data layer on serverless — if you need durable, cross-request state on Vercel, swap `lib/db.js` / `lib/results.js` for a real database (the module boundaries are already isolated, so it's a contained change).
 

@@ -62,7 +62,7 @@ export default function Dashboard() {
       {/* Stats */}
       <div className="rise mt-6 grid grid-cols-2 gap-3 md:grid-cols-4" style={{ animationDelay: "60ms" }}>
         {stats.map((s) => (
-          <div key={s.label} className="rounded-md border border-line bg-panel p-4 shadow-card">
+          <div key={s.label} className="rounded-xl border border-line bg-panel p-4 shadow-card">
             <div className="font-mono text-[11px] text-faint">{s.label}</div>
             <div className="mt-1.5 text-[30px] font-semibold leading-none tracking-tight" style={{ color: s.color }}>
               {s.value}
@@ -76,7 +76,7 @@ export default function Dashboard() {
         <h2 className="font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-faint">
           Processed invoices
         </h2>
-        <div className="mt-3 overflow-hidden rounded-md border border-line bg-panel shadow-card">
+        <div className="mt-3 overflow-hidden rounded-xl border border-line bg-panel shadow-card">
           {runs.length === 0 ? (
             <div className="px-5 py-12 text-center">
               <div className="text-[15px] font-medium text-muted">No invoices processed yet this session.</div>
@@ -122,7 +122,7 @@ export default function Dashboard() {
                     <td className="px-4 py-3 text-right">
                       <Link
                         href={`/audit/${r.id}`}
-                        className="rounded-sm border border-line px-2.5 py-1 font-mono text-[11.5px] text-muted transition-colors hover:border-accent hover:text-ink"
+                        className="rounded-lg border border-line px-2.5 py-1 font-mono text-[11.5px] text-muted transition-colors hover:border-accent hover:text-ink"
                       >
                         Audit
                       </Link>
@@ -143,13 +143,13 @@ export default function Dashboard() {
           </h2>
           <button
             onClick={() => fetch("/api/reset", { method: "POST" }).then(refresh)}
-            className="rounded-sm border border-line px-2.5 py-1 font-mono text-[11px] text-faint transition-colors hover:border-reject hover:text-reject"
+            className="rounded-lg border border-line px-2.5 py-1 font-mono text-[11px] text-faint transition-colors hover:border-reject hover:text-reject"
             title="Wipe session state (history, ledger, PO balances)"
           >
             Reset session
           </button>
         </div>
-        <div className="mt-3 overflow-hidden rounded-md border border-line bg-panel shadow-card">
+        <div className="mt-3 overflow-hidden rounded-xl border border-line bg-panel shadow-card">
           <table className="w-full text-left text-[12.5px]">
             <thead>
               <tr className="border-b border-line font-mono text-[10.5px] uppercase tracking-[0.1em] text-faint">

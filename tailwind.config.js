@@ -13,6 +13,8 @@ module.exports = {
         ink: "var(--ink)",
         muted: "var(--muted)",
         faint: "var(--faint)",
+        accent: "var(--accent)",
+        "accent-soft": "var(--accent-soft)",
         verdict: {
           approve: "var(--v-approve)",
           pending: "var(--v-pending)",
@@ -25,7 +27,8 @@ module.exports = {
         mono: "var(--font-mono)",
       },
       boxShadow: {
-        card: "0 1px 0 0 rgba(255,255,255,0.03) inset, 0 8px 24px rgba(0,0,0,0.35)",
+        card: "0 1px 2px rgba(16,24,40,0.05), 0 4px 14px rgba(16,24,40,0.05)",
+        cardHover: "0 1px 2px rgba(16,24,40,0.06), 0 8px 24px rgba(16,24,40,0.09)",
       },
     },
   },
